@@ -9,6 +9,18 @@ tied to a pyobfus major version; pin `pyobfus-version` if you need that.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-10
+
+### Fixed
+
+- Shortened the action description to 111 characters. GitHub Marketplace caps
+  it at 125 and refuses the listing above that, which surfaced only on the
+  publish page — the metadata was otherwise valid. CI now asserts the limit so
+  it fails in the repository instead.
+
+  No behaviour change; `action.yml` metadata only. 1.0.0 works, it just cannot
+  be listed on Marketplace.
+
 ## [1.0.0] - 2026-09-10
 
 ### Added

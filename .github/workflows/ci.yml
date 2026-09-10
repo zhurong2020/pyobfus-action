@@ -191,6 +191,10 @@ jobs:
           # GitHub Marketplace refuses a listing without these.
           assert spec["branding"]["icon"] and spec["branding"]["color"]
           assert spec["name"] and spec["description"]
+          # Marketplace limits; both were only discovered on the publish page.
+          desc = " ".join(spec["description"].split())
+          assert len(desc) < 125, f"description is {len(desc)} chars, limit is 125"
+          assert spec["branding"]["icon"] in {"shield", "lock", "package", "code", "zap"}
           declared = set(spec["inputs"])
           required = {"source", "mode", "fail-on"}
           assert required <= declared, required - declared
