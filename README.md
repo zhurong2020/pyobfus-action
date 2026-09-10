@@ -1,5 +1,9 @@
 # pyobfus GitHub Action
 
+[![Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-pyobfus%20scan%20and%20build-blue?logo=github)](https://github.com/marketplace/actions/pyobfus-scan-and-build)
+[![CI](https://github.com/zhurong2020/pyobfus-action/actions/workflows/ci.yml/badge.svg)](https://github.com/zhurong2020/pyobfus-action/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+
 Run [pyobfus](https://github.com/zhurong2020/pyobfus)'s pre-flight risk scan or
 an obfuscated build in CI. Findings go to GitHub Code Scanning as SARIF and to
 the job summary as a table, and the step's pass/fail behaviour is something you
