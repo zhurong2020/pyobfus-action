@@ -1,0 +1,29 @@
+# Explicit rule set, so a ruff upgrade cannot spontaneously turn CI red by
+# changing its defaults -- which is exactly what happened on this repo's first
+# CI run, where a locally-passing file failed against a newer ruff.
+# CI pins the ruff version too; both halves are needed.
+
+target-version = "py39"
+line-length = 100
+
+[lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # import sorting
+    "UP",    # pyupgrade
+    "B",     # bugbear
+    "SIM",   # simplify
+    "ISC",   # implicit string concat -- catches a missing comma in a list
+    "BLE",   # blind except
+    "EXE",   # shebang / executable-bit consistency
+    "FURB",  # modernization
+    "PL",    # pylint subset
+    "RUF",   # ruff-specific
+]
+
+[lint.per-file-ignores]
+# The fixtures exist to trip pyobfus's own risk scanner. Their contents are the
+# test input, not code to be linted clean.
+"tests/fixtures/**" = ["ALL"]

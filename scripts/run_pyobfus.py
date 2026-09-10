@@ -27,10 +27,16 @@ import os
 import shlex
 import subprocess
 import sys
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as dist_version
 from pathlib import Path
-from typing import Any, Dict, List, NoReturn, Optional, Tuple
+from typing import Any, NoReturn
 
 SEVERITIES = ("high", "medium", "low", "info")
+
+# A job summary is a UI surface, not a report. Past this many rows it stops
+# being readable; the full set is always in the JSON and SARIF artifacts.
+MAX_SUMMARY_ROWS = 50
 
 # pyobfus's own exit codes. 0 and 1 are contract; anything else is a tool
 # error (2 is Click's usage error) and must fail regardless of `fail-on`.
@@ -51,15 +57,14 @@ def fail(message: str) -> NoReturn:
     sys.exit(1)
 
 
-def write_outputs(pairs: Dict[str, Any]) -> None:
+def write_outputs(pairs: dict[str, Any]) -> None:
     """Publish step outputs. No-op when run outside Actions, which is what
     makes this script testable locally."""
     path = os.environ.get("GITHUB_OUTPUT")
     if not path:
         return
     with open(path, "a", encoding="utf-8") as handle:
-        for key, value in pairs.items():
-            handle.write(f"{key}={value}\n")
+        handle.writelines(f"{key}={value}\n" for key, value in pairs.items())
 
 
 def write_summary(markdown: str) -> None:
@@ -74,7 +79,7 @@ def resolve_python() -> str:
     return sys.executable or "python3"
 
 
-def build_command() -> Tuple[List[str], str, str, str]:
+def build_command() -> tuple[list[str], str, str, str]:
     """Return (argv, mode, sarif_path, json_path)."""
     source = env("INPUT_SOURCE")
     if not source:
@@ -121,7 +126,7 @@ def build_command() -> Tuple[List[str], str, str, str]:
     return argv, mode, sarif_path, json_path
 
 
-def parse_payload(stdout: str) -> Optional[Dict[str, Any]]:
+def parse_payload(stdout: str) -> dict[str, Any] | None:
     """pyobfus prints one JSON object on stdout. A tool error prints a Click
     usage message instead, which is how a failure is told apart from findings.
     """
@@ -135,7 +140,7 @@ def parse_payload(stdout: str) -> Optional[Dict[str, Any]]:
     return payload if isinstance(payload, dict) else None
 
 
-def counts_from(payload: Dict[str, Any]) -> Dict[str, int]:
+def counts_from(payload: dict[str, Any]) -> dict[str, int]:
     raw = payload.get("severity_counts")
     if not isinstance(raw, dict):
         return {level: 0 for level in SEVERITIES}
@@ -151,9 +156,9 @@ def relative(path_value: str, root: Path) -> str:
 
 
 def summarize(
-    payload: Optional[Dict[str, Any]],
+    payload: dict[str, Any] | None,
     mode: str,
-    counts: Dict[str, int],
+    counts: dict[str, int],
     version: str,
     exit_code: int,
 ) -> str:
@@ -185,8 +190,10 @@ def summarize(
         f"| Info | {counts['info']} |",
         f"| **Total** | **{total}** |",
         "",
-        f"Scanned {(payload or {}).get('files_scanned', 0)} file(s). "
-        f"pyobfus exit code {exit_code}.",
+        (
+            f"Scanned {(payload or {}).get('files_scanned', 0)} file(s). "
+            f"pyobfus exit code {exit_code}."
+        ),
         "",
     ]
 
@@ -194,7 +201,7 @@ def summarize(
     if risks:
         lines += ["<details><summary>Findings</summary>", ""]
         lines += ["| Severity | Category | Location | Message |", "| --- | --- | --- | --- |"]
-        for risk in risks[:50]:
+        for risk in risks[:MAX_SUMMARY_ROWS]:
             location = relative(str(risk.get("file", "")), root)
             line_no = risk.get("line")
             if line_no:
@@ -204,19 +211,20 @@ def summarize(
                 f"| {risk.get('severity', '')} | {risk.get('category', '')} "
                 f"| `{location}` | {message} |"
             )
-        if len(risks) > 50:
-            lines.append(f"| … | | | {len(risks) - 50} more finding(s) not listed |")
+        if len(risks) > MAX_SUMMARY_ROWS:
+            hidden = len(risks) - MAX_SUMMARY_ROWS
+            lines.append(f"| … | | | {hidden} more finding(s) not listed |")
         lines += ["", "</details>", ""]
 
     return "\n".join(lines) + "\n"
 
 
 def installed_version() -> str:
+    """Best-effort. A missing version must never fail the run, but the catch is
+    narrow so a real defect here is not swallowed as an empty string."""
     try:
-        from importlib.metadata import version as dist_version
-
         return dist_version("pyobfus")
-    except Exception:
+    except PackageNotFoundError:
         return ""
 
 
@@ -227,7 +235,7 @@ def main() -> int:
     print(" ".join(shlex.quote(part) for part in argv))
     print("::endgroup::")
 
-    completed = subprocess.run(argv, capture_output=True, text=True)
+    completed = subprocess.run(argv, capture_output=True, text=True, check=False)
     exit_code = completed.returncode
     payload = parse_payload(completed.stdout)
 

@@ -175,9 +175,13 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
-      - run: pip install ruff mypy
-      - run: ruff check scripts/
-      - run: mypy --ignore-missing-imports scripts/
+      # Pinned: an unpinned `pip install ruff` turned this job red on the first
+      # CI run, because a newer ruff's default rule set found issues a locally
+      # installed older one did not. ruff.toml fixes the rules, this fixes the
+      # tool. Bump both deliberately.
+      - run: pip install "ruff==0.15.7" "mypy==1.19.1" pyyaml
+      - run: ruff check .
+      - run: mypy scripts/
       - name: action.yml must stay valid YAML with the Marketplace fields
         run: |
           python - <<'PY'
