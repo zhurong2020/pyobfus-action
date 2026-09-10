@@ -1,0 +1,185 @@
+name: "pyobfus"
+description: >-
+  Run the pyobfus pre-flight risk scan or an obfuscated build in CI, with SARIF
+  output for GitHub Code Scanning and findings surfaced in the job summary.
+author: "zhurong2020"
+
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  source:
+    description: "Path to scan (mode: check) or obfuscate (mode: build)."
+    required: true
+
+  mode:
+    description: >-
+      "check" runs the pre-flight risk scan and can emit SARIF.
+      "build" produces obfuscated output.
+    required: false
+    default: "check"
+
+  output:
+    description: "Output path for mode: build. Required in that mode, ignored otherwise."
+    required: false
+    default: ""
+
+  fail-on:
+    description: >-
+      When findings should fail the step. "high" (default) matches the CLI:
+      fail when pyobfus exits non-zero. "any" fails on a finding of any
+      severity. "never" never fails on findings, which is what you want when a
+      later step uploads the SARIF. A pyobfus tool error always fails the step
+      regardless of this setting.
+    required: false
+    default: "high"
+
+  sarif-file:
+    description: >-
+      Where to write the SARIF 2.1.0 report (mode: check). Set to an empty
+      string to skip SARIF entirely.
+    required: false
+    default: "pyobfus.sarif"
+
+  json-file:
+    description: "Where to save the machine-readable JSON result."
+    required: false
+    default: "pyobfus-result.json"
+
+  config:
+    description: "Path to a pyobfus.yaml. Omit to use auto-discovery."
+    required: false
+    default: ""
+
+  preset:
+    description: "Preset name (fastapi, django, flask, pydantic, click, sqlalchemy, ml, ...)."
+    required: false
+    default: ""
+
+  offline:
+    description: >-
+      Skip the PyPI lookups behind the dependency advisory. Recommended for
+      hermetic or network-restricted runners.
+    required: false
+    default: "false"
+
+  verify-syntax:
+    description: >-
+      mode: build only. Compile every generated file in memory after the build.
+      Never imports or executes your project and writes no __pycache__.
+    required: false
+    default: "false"
+
+  provenance-manifest:
+    description: "mode: build only. Path for a local JSON provenance manifest."
+    required: false
+    default: ""
+
+  extra-args:
+    description: >-
+      Additional raw CLI arguments, space-separated. An escape hatch for flags
+      this action does not model; no validation is performed.
+    required: false
+    default: ""
+
+  pyobfus-version:
+    description: >-
+      Version specifier to install, e.g. "0.5.23". Defaults to the latest
+      release. Pin this if you need reproducible CI.
+    required: false
+    default: ""
+
+  install:
+    description: >-
+      Whether this action installs pyobfus with pip. Set to "false" if an
+      earlier step already installed it (a private index, a pinned lockfile, or
+      Pro).
+    required: false
+    default: "true"
+
+  working-directory:
+    description: "Directory to run in. Paths are resolved relative to it."
+    required: false
+    default: "."
+
+outputs:
+  exit-code:
+    description: "pyobfus's own exit code: 0 clean, 1 findings that warrant blocking."
+    value: ${{ steps.pyobfus.outputs.exit-code }}
+  status:
+    description: '"clean" or "findings".'
+    value: ${{ steps.pyobfus.outputs.status }}
+  sarif-file:
+    description: "Path to the written SARIF file, or empty if none was requested."
+    value: ${{ steps.pyobfus.outputs.sarif-file }}
+  json-file:
+    description: "Path to the saved JSON result."
+    value: ${{ steps.pyobfus.outputs.json-file }}
+  files-scanned:
+    description: "Number of Python files scanned (mode: check)."
+    value: ${{ steps.pyobfus.outputs.files-scanned }}
+  findings-total:
+    description: "Total findings across all severities."
+    value: ${{ steps.pyobfus.outputs.findings-total }}
+  findings-high:
+    description: "High-severity findings."
+    value: ${{ steps.pyobfus.outputs.findings-high }}
+  findings-medium:
+    description: "Medium-severity findings."
+    value: ${{ steps.pyobfus.outputs.findings-medium }}
+  findings-low:
+    description: "Low-severity findings."
+    value: ${{ steps.pyobfus.outputs.findings-low }}
+  findings-info:
+    description: "Informational findings, including compatibility advisories."
+    value: ${{ steps.pyobfus.outputs.findings-info }}
+  version:
+    description: "The pyobfus version that actually ran."
+    value: ${{ steps.pyobfus.outputs.version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install pyobfus
+      if: inputs.install == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PYOBFUS_VERSION: ${{ inputs.pyobfus-version }}
+      run: |
+        set -euo pipefail
+        PY="$(command -v python3 || command -v python)"
+        if [ -z "$PY" ]; then
+          echo "::error::No python3 on PATH. Add actions/setup-python before this action."
+          exit 1
+        fi
+        if [ -n "$PYOBFUS_VERSION" ]; then
+          SPEC="pyobfus==$PYOBFUS_VERSION"
+        else
+          SPEC="pyobfus"
+        fi
+        echo "Installing $SPEC"
+        "$PY" -m pip install --disable-pip-version-check --quiet "$SPEC"
+
+    - name: Run pyobfus
+      id: pyobfus
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        INPUT_SOURCE: ${{ inputs.source }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_OUTPUT: ${{ inputs.output }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_SARIF_FILE: ${{ inputs.sarif-file }}
+        INPUT_JSON_FILE: ${{ inputs.json-file }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_PRESET: ${{ inputs.preset }}
+        INPUT_OFFLINE: ${{ inputs.offline }}
+        INPUT_VERIFY_SYNTAX: ${{ inputs.verify-syntax }}
+        INPUT_PROVENANCE_MANIFEST: ${{ inputs.provenance-manifest }}
+        INPUT_EXTRA_ARGS: ${{ inputs.extra-args }}
+      run: |
+        set -euo pipefail
+        PY="$(command -v python3 || command -v python)"
+        "$PY" "$GITHUB_ACTION_PATH/scripts/run_pyobfus.py"

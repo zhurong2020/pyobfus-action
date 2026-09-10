@@ -1,0 +1,194 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # The action is the product, so the tests use it the way a consumer would --
+  # `uses: ./` against real fixtures -- rather than calling the driver directly.
+  check-clean:
+    name: check / clean source (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - id: scan
+        uses: ./
+        with:
+          source: tests/fixtures/clean_project
+          offline: "true"
+
+      - name: A clean source must report clean with no findings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ steps.scan.outputs.status }}" = "clean"
+          test "${{ steps.scan.outputs.exit-code }}" = "0"
+          test "${{ steps.scan.outputs.findings-total }}" = "0"
+          test "${{ steps.scan.outputs.files-scanned }}" = "1"
+          test -f "${{ steps.scan.outputs.sarif-file }}"
+          test -f "${{ steps.scan.outputs.json-file }}"
+          echo "pyobfus version that ran: ${{ steps.scan.outputs.version }}"
+
+  check-findings:
+    name: check / findings are reported and gated
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      # fail-on: never is the mode that lets a later step upload the SARIF.
+      - id: soft
+        uses: ./
+        with:
+          source: tests/fixtures/risky_project
+          fail-on: never
+          offline: "true"
+          sarif-file: soft.sarif
+
+      - name: Findings are surfaced without failing the step
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ steps.soft.outputs.status }}" = "findings"
+          test "${{ steps.soft.outputs.exit-code }}" = "1"
+          test "${{ steps.soft.outputs.findings-high }}" = "1"
+          test -f soft.sarif
+          python -c "import json,sys; d=json.load(open('soft.sarif')); assert d['version']=='2.1.0'; assert len(d['runs'][0]['results'])==1"
+
+      # The default gate must actually block.
+      - id: hard
+        uses: ./
+        continue-on-error: true
+        with:
+          source: tests/fixtures/risky_project
+          offline: "true"
+          sarif-file: hard.sarif
+          json-file: hard.json
+
+      - name: Default fail-on must fail the step, after writing artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ steps.hard.outcome }}" = "failure"
+          # The point of this action: artifacts still exist even though it failed,
+          # so an upload step can run afterwards without the `|| true` footgun.
+          test -f hard.sarif
+          test -f hard.json
+
+  tool-error-is-not-a-findings-gate:
+    name: check / a tool error fails even with fail-on never
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - id: broken
+        uses: ./
+        continue-on-error: true
+        with:
+          source: tests/fixtures/does_not_exist
+          fail-on: never
+          offline: "true"
+
+      - name: fail-on never must not hide a bad path
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ steps.broken.outcome }}" = "failure"
+          test "${{ steps.broken.outputs.status }}" = "error"
+
+  build:
+    name: build / obfuscate with syntax verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - id: build
+        uses: ./
+        with:
+          source: tests/fixtures/clean_project
+          mode: build
+          output: dist
+          verify-syntax: "true"
+          provenance-manifest: provenance.json
+
+      - name: Output is written, verified and provenance-recorded
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ steps.build.outputs.status }}" = "clean"
+          test "${{ steps.build.outputs.files-scanned }}" = "1"
+          test -f dist/calculator.py
+          test -f provenance.json
+          python -c "import json; d=json.load(open('provenance.json')); assert d['tool']['name']=='pyobfus'"
+          # The build marker must be present and must not leak an absolute path.
+          head -1 dist/calculator.py | grep -q '^# pyobfus:generated'
+          ! grep -q "$(pwd)" dist/calculator.py
+          # And the obfuscated output must still be valid Python.
+          python -m py_compile dist/calculator.py
+
+  pinned-version:
+    name: check / an explicit version pin is honoured
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - id: pinned
+        uses: ./
+        with:
+          source: tests/fixtures/clean_project
+          pyobfus-version: "0.5.23"
+          offline: "true"
+
+      - shell: bash
+        run: test "${{ steps.pinned.outputs.version }}" = "0.5.23"
+
+  lint:
+    name: Lint the driver
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff mypy
+      - run: ruff check scripts/
+      - run: mypy --ignore-missing-imports scripts/
+      - name: action.yml must stay valid YAML with the Marketplace fields
+        run: |
+          python - <<'PY'
+          import yaml
+          spec = yaml.safe_load(open("action.yml"))
+          assert spec["runs"]["using"] == "composite"
+          # GitHub Marketplace refuses a listing without these.
+          assert spec["branding"]["icon"] and spec["branding"]["color"]
+          assert spec["name"] and spec["description"]
+          declared = set(spec["inputs"])
+          required = {"source", "mode", "fail-on"}
+          assert required <= declared, required - declared
+          print(f"{len(declared)} inputs, {len(spec['outputs'])} outputs")
+          PY
