@@ -1,4 +1,8 @@
-name: "pyobfus"
+# Marketplace refuses a listing whose `name` exactly matches an existing GitHub
+# user or organization. github.com/pyobfus is a third-party account (created
+# 2023-02-25, 0 public repos), so the bare "pyobfus" would be rejected at
+# publish time. The repo, the `uses:` path and the tool itself are unaffected.
+name: "pyobfus scan and build"
 description: >-
   Run the pyobfus pre-flight risk scan or an obfuscated build in CI, with SARIF
   output for GitHub Code Scanning and findings surfaced in the job summary.
