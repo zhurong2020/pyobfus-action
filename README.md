@@ -109,6 +109,25 @@ The mapping file is your de-obfuscation key. If you produce one with
 `extra-args: --save-mapping mapping.json`, treat it as a secret: keep it out of
 the shipped artifact, and out of any public workflow artifact.
 
+### Build output is not a self-contained deployment
+
+This action invokes the pyobfus **builder**; it does not vendor Python package
+dependencies into `output`. Community output normally has no pyobfus runtime
+dependency. Pro artifacts that use runtime-backed protection import the
+separately published `pyobfus-runtime` package on the target machine.
+
+The current builder declares `pyobfus-runtime>=0.1,<1`, so the default
+`install: true` step installs a compatible runtime on the build runner. That
+does not place the package inside `dist/`. Declare/install the same runtime
+requirement in the environment or application package that will execute the
+generated artifact. Target machines need neither the Pro builder nor a build
+licence.
+
+With `install: false`, this action installs nothing: the workflow owns both the
+builder and compatible runtime setup. A provenance manifest records
+`runtime_requirement` when a build needs it; use that fact as deployment input,
+not as evidence that the dependency was bundled.
+
 ## Inputs
 
 | Input | Default | Description |
@@ -151,6 +170,13 @@ CI.
 
 The action installs pyobfus with `pip` unless you set `install: false`. Pin
 `pyobfus-version` if you want your CI reproducible.
+
+pyobfus Core, `pyobfus-runtime`, and this Action are independently versioned.
+`@v1` selects the current compatible Action wrapper, not pyobfus 1.x. By
+default the wrapper installs the latest pyobfus release; set
+`pyobfus-version` to an exact version for reproducible behavior. See
+[Architecture and compatibility](ARCHITECTURE.md) for ownership, deployment,
+and update rules.
 
 ## Why you can trust this action
 

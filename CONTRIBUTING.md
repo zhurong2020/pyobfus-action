@@ -31,6 +31,10 @@ on Ubuntu, macOS and Windows. Add a fixture and a CI assertion for any
 behaviour change — the tests use `uses: ./` so they exercise the action the way
 a consumer does, not the driver in isolation.
 
+For documentation or metadata-only changes, also verify `action.yml` remains
+valid YAML and that README examples name real inputs and outputs. CI performs
+that metadata check on every push.
+
 ## Enable the pre-commit guard
 
 ```bash
@@ -45,3 +49,8 @@ repository.
 This repository is the CI wrapper. Changes to obfuscation behaviour, presets,
 the risk scanner or SARIF content belong in
 [pyobfus](https://github.com/zhurong2020/pyobfus).
+
+Changes to code imported by generated Pro artifacts belong to the
+`pyobfus_runtime/` project in the main pyobfus repository. This wrapper may
+document or test the delivery contract, but must not copy runtime
+implementation into the Action repository. See [ARCHITECTURE.md](ARCHITECTURE.md).
