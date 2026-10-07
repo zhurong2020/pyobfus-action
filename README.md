@@ -105,6 +105,10 @@ grant.
 never imports or executes your project and writes no `__pycache__`, so it
 proves the output parses, not that it behaves.
 
+What a build renames depends on the pyobfus build mode: a directory build
+renames module-level names across files, not methods, locals or parameters.
+See the [pyobfus support matrix](https://pyobfus.readthedocs.io/en/latest/SUPPORT_MATRIX/#what-gets-renamed).
+
 The mapping file is your de-obfuscation key. If you produce one with
 `extra-args: --save-mapping mapping.json`, treat it as a secret: keep it out of
 the shipped artifact, and out of any public workflow artifact.
