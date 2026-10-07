@@ -12,7 +12,7 @@ tied to a pyobfus major version; pin `pyobfus-version` if you need that.
 ### Documentation
 
 - README links to pyobfus's table of what each build mode renames (directory
-  builds rename module-level names only), confirmed against pyobfus 0.5.31.
+  builds rename module-level names only), confirmed against pyobfus 0.5.32.
 
 ## [1.0.1] - 2026-09-10
 

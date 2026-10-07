@@ -39,7 +39,7 @@ Update the owning project, then adapt the wrapper with a real-contract test.
 
 ## Version contract
 
-- Action tags (`v1`, `v1.0.1`) and pyobfus versions (`0.5.31`) are unrelated.
+- Action tags (`v1`, `v1.0.1`) and pyobfus versions (`0.5.32`) are unrelated.
 - `@v1` is a moving wrapper tag. Pin an exact Action tag or commit SHA when the
   wrapper itself must be immutable.
 - `pyobfus-version` pins the builder installed by this Action. Omit it to use
