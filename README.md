@@ -105,8 +105,9 @@ grant.
 never imports or executes your project and writes no `__pycache__`, so it
 proves the output parses, not that it behaves.
 
-What a build renames depends on the pyobfus build mode: a directory build
-renames module-level names across files, not methods, locals or parameters.
+What a build renames depends on the pyobfus build mode: since pyobfus 0.6.0 a
+directory build renames module-level names across files and function-local
+variables, not methods, attributes or parameters.
 See the [pyobfus support matrix](https://pyobfus.readthedocs.io/en/latest/SUPPORT_MATRIX/#what-gets-renamed).
 
 The mapping file is your de-obfuscation key. If you produce one with
