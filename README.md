@@ -107,12 +107,16 @@ proves the output parses, not that it behaves.
 
 What a build renames depends on the pyobfus build mode: since pyobfus 0.6.0 a
 directory build renames module-level names across files and function-local
-variables, not methods, attributes or parameters.
+variables, and since 0.7.0 also attribute access through project modules
+(`from pkg import config; config.LIMIT`); methods, other attributes and
+parameters keep their names. pyobfus 0.7.0 changes build output, so rebuild
+and keep the new mapping when you upgrade or pin `pyobfus-version`.
 See the [pyobfus support matrix](https://pyobfus.readthedocs.io/en/latest/SUPPORT_MATRIX/#what-gets-renamed).
 
 The mapping file is your de-obfuscation key. If you produce one with
 `extra-args: --save-mapping mapping.json`, treat it as a secret: keep it out of
-the shipped artifact, and out of any public workflow artifact.
+the shipped artifact, and out of any public workflow artifact (pyobfus 0.7.0
+warns when `--save-mapping` points inside the output directory).
 
 ### Build output is not a self-contained deployment
 
