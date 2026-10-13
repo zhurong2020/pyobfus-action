@@ -39,12 +39,12 @@ Update the owning project, then adapt the wrapper with a real-contract test.
 
 ## Version contract
 
-- Action tags (`v1`, `v1.0.1`) and pyobfus versions (`0.6.0`) are unrelated.
+- Action tags (`v1`, `v1.0.1`) and pyobfus versions (`0.7.0`) are unrelated.
 - `@v1` is a moving wrapper tag. Pin an exact Action tag or commit SHA when the
   wrapper itself must be immutable.
 - `pyobfus-version` pins the builder installed by this Action. Omit it to use
   latest; pin it for reproducible CI.
-- The current builder declares `pyobfus-runtime>=0.1,<1`. Runtime-backed
+- The current builder declares `pyobfus-runtime>=0.1.1,<1`. Runtime-backed
   generated artifacts must install a compatible runtime on the target.
 - `install: false` transfers all builder/runtime environment responsibility to
   the calling workflow.
@@ -64,6 +64,14 @@ For a runtime-backed Pro build:
 4. install and test the application in a fresh target environment; and
 5. do not install or ship the complete Pro builder merely to satisfy runtime
    imports.
+
+## Optional Core name check (PR #98, unreleased)
+
+Name verification is a Core CLI/report contract, not a new Action feature.
+PyPI 0.7.0 does not contain it. Existing `extra-args` passes build arguments
+through, but callers must install a builder supporting the option before using
+it. The Action's `verify-syntax` input remains compilation-only; no wrapper
+input/output or tag changes are part of this documentation sync.
 
 ## Documentation synchronization
 

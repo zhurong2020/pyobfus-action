@@ -105,6 +105,13 @@ grant.
 never imports or executes your project and writes no `__pycache__`, so it
 proves the output parses, not that it behaves.
 
+Core PR #98 adds an opt-in `--verify-names` check for newly unbound globals.
+It is merged in pyobfus but not yet published in PyPI 0.7.0. This Action has no
+new input and `verify-syntax` does not enable name checking. Once a builder
+containing the flag is available, it can be passed via `extra-args` in build
+mode; pin that builder version and review partial coverage in its JSON result.
+See [Core name verification](https://pyobfus.readthedocs.io/en/latest/NAME_VERIFICATION/).
+
 What a build renames depends on the pyobfus build mode: since pyobfus 0.6.0 a
 directory build renames module-level names across files and function-local
 variables, and since 0.7.0 also attribute access through project modules
