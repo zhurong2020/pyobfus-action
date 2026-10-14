@@ -65,12 +65,12 @@ For a runtime-backed Pro build:
 5. do not install or ship the complete Pro builder merely to satisfy runtime
    imports.
 
-## Optional Core name check (PR #98, unreleased)
+## Optional Core name check (since Core 0.7.1)
 
 Name verification is a Core CLI/report contract, not a new Action feature.
-PyPI 0.7.0 does not contain it. Existing `extra-args` passes build arguments
-through, but callers must install a builder supporting the option before using
-it. The Action's `verify-syntax` input remains compilation-only; no wrapper
+Core 0.7.1 publishes `--verify-names`; existing `extra-args` passes it through
+in build mode. Pin `pyobfus-version` to `0.7.1` or a later compatible release
+and review partial coverage in the builder JSON result. The Action's `verify-syntax` input remains compilation-only; no wrapper
 input/output or tag changes are part of this documentation sync.
 
 ## Documentation synchronization
