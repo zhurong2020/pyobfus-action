@@ -34,7 +34,7 @@ kills the job **before** your upload step runs, so the usual fix is `|| true`:
 ```yaml
 # The footgun this action removes
 - run: pyobfus --check src/ --sarif pyobfus.sarif || true
-- uses: github/codeql-action/upload-sarif@v3
+- uses: github/codeql-action/upload-sarif@v4
   with:
     sarif_file: pyobfus.sarif
 ```
@@ -71,7 +71,7 @@ jobs:
           source: src/
           fail-on: never        # let the upload happen first
 
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: ${{ steps.scan.outputs.sarif-file }}
           category: pyobfus-preflight
