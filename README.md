@@ -206,9 +206,12 @@ Not a badge, things you can check yourself:
   CLI's PyPI dependency-name lookup. Pro licence verification or an explicitly
   requested trial may still contact the pyobfus licence server; see the
   [Core network guide](https://pyobfus.readthedocs.io/en/latest/NETWORK_BEHAVIOR/).
-- **Source, findings and mappings stay on the runner.** The action does not
-  upload them or send telemetry; the CLI may send dependency names or licence
-  data in the documented cases above.
+- **Source and mapping files stay on the runner.** The action does not upload
+  them or send telemetry. It does write a findings table (up to 50 rows:
+  severity, category, `file:line` and message) to the GitHub job summary,
+  which GitHub keeps with the workflow run, and the SARIF file reaches Code
+  Scanning only if a later step uploads it. The CLI may send dependency names
+  or licence data in the documented cases above.
 - Third-party actions in this repo's own CI are **pinned to commit SHAs**.
 - The CI here uses the action against real fixtures, including a test asserting
   that `fail-on: never` still fails on a bad path — the exact behaviour the
