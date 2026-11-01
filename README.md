@@ -132,7 +132,7 @@ dependencies into `output`. Community output normally has no pyobfus runtime
 dependency. Pro artifacts that use runtime-backed protection import the
 separately published `pyobfus-runtime` package on the target machine.
 
-The current builder declares `pyobfus-runtime>=0.1,<1`, so the default
+The current builder declares `pyobfus-runtime>=0.1.1,<1`, so the default
 `install: true` step installs a compatible runtime on the build runner. That
 does not place the package inside `dist/`. Declare/install the same runtime
 requirement in the environment or application package that will execute the
@@ -201,10 +201,17 @@ Not a badge, things you can check yourself:
 - It is a **composite action**, not a container. `action.yml` and
   `scripts/run_pyobfus.py` are the entire implementation — about 300 readable
   lines, no bundled binaries and no build step between source and what runs.
-- **No network access beyond PyPI.** The action installs pyobfus and runs it.
-  Set `offline: true` and pyobfus makes no network calls at all.
-- **Nothing is sent anywhere.** Your source, findings and mappings stay on the
-  runner. There is no telemetry.
+- **Network behavior is explicit.** The action installs the selected builder
+  from the configured package index. In check mode, `offline: true` skips the
+  CLI's PyPI dependency-name lookup. Pro licence verification or an explicitly
+  requested trial may still contact the pyobfus licence server; see the
+  [Core network guide](https://pyobfus.readthedocs.io/en/latest/NETWORK_BEHAVIOR/).
+- **Source and mapping files stay on the runner.** The action does not upload
+  them or send telemetry. It does write a findings table (up to 50 rows:
+  severity, category, `file:line` and message) to the GitHub job summary,
+  which GitHub keeps with the workflow run, and the SARIF file reaches Code
+  Scanning only if a later step uploads it. The CLI may send dependency names
+  or licence data in the documented cases above.
 - Third-party actions in this repo's own CI are **pinned to commit SHAs**.
 - The CI here uses the action against real fixtures, including a test asserting
   that `fail-on: never` still fails on a bad path — the exact behaviour the
