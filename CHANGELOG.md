@@ -9,6 +9,18 @@ tied to a pyobfus major version; pin `pyobfus-version` if you need that.
 
 ## [Unreleased]
 
+### Added
+
+- Prepare `license-key` for Pro CI builds with Core 0.12.0+: forward a
+  non-empty secret through the CLI child environment, preserving an inherited
+  `PYOBFUS_LICENSE_KEY` when the input is empty. Keys are not CLI arguments or
+  Action outputs. This input is not yet available on the published `v1` tag.
+
+### Fixed
+
+- Treat structured CLI `status: error` responses as tool failures even when
+  their exit code is 1. `fail-on: never` must not hide a denied Pro build.
+
 ### Documentation
 
 - Clarify Core PR #98 name-verification availability: merged but not in PyPI

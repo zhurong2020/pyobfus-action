@@ -65,6 +65,20 @@ For a runtime-backed Pro build:
 5. do not install or ship the complete Pro builder merely to satisfy runtime
    imports.
 
+## CI license input (prepared for Core 0.12.0)
+
+`license-key` is a wrapper input, not a new activation protocol. `action.yml`
+passes it as `INPUT_LICENSE_KEY`; the driver copies the process environment
+and maps a non-empty value to `PYOBFUS_LICENSE_KEY` for its CLI child only.
+An empty input retains a caller-provided environment variable. The input is
+never added to argv, output JSON, Action outputs or the job summary.
+
+Core owns validation, online verification, device-slot policy and failure
+semantics. `offline` still controls dependency advisory lookups only. The
+wrapper does not register a runner or persist a license. CI uses synthetic
+invalid values to test fail-closed behavior; no real key is stored in CI.
+The input is prepared on a branch and is not in the current `v1` tag.
+
 ## Optional Core name check (since Core 0.7.1)
 
 Name verification is a Core CLI/report contract, not a new Action feature.

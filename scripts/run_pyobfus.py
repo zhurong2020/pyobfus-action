@@ -235,7 +235,12 @@ def main() -> int:
     print(" ".join(shlex.quote(part) for part in argv))
     print("::endgroup::")
 
-    completed = subprocess.run(argv, capture_output=True, text=True, check=False)
+    child_env = os.environ.copy()
+    child_env.pop("INPUT_LICENSE_KEY", None)
+    license_key = env("INPUT_LICENSE_KEY")
+    if license_key:
+        child_env["PYOBFUS_LICENSE_KEY"] = license_key
+    completed = subprocess.run(argv, capture_output=True, text=True, check=False, env=child_env)
     exit_code = completed.returncode
     payload = parse_payload(completed.stdout)
 
@@ -245,12 +250,16 @@ def main() -> int:
     # A tool error: no parseable JSON, or an exit code outside the contract.
     # This always fails, and `fail-on: never` must not be able to hide it --
     # otherwise a typo'd path would look like a clean scan.
-    if payload is None or exit_code not in (EXIT_CLEAN, EXIT_FINDINGS):
+    if (
+        payload is None
+        or exit_code not in (EXIT_CLEAN, EXIT_FINDINGS)
+        or payload.get("status") == "error"
+    ):
         if completed.stdout.strip():
             print(completed.stdout, file=sys.stderr)
         write_outputs({"exit-code": exit_code, "status": "error"})
         fail(
-            f"pyobfus failed with exit code {exit_code} and produced no JSON result. "
+            f"pyobfus failed with exit code {exit_code}. "
             "This is a tool or configuration error, not a findings gate."
         )
 

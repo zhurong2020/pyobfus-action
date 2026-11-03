@@ -125,6 +125,41 @@ The mapping file is your de-obfuscation key. If you produce one with
 the shipped artifact, and out of any public workflow artifact (pyobfus 0.7.0
 warns when `--save-mapping` points inside the output directory).
 
+### Pro builds in CI (Core 0.12.0+)
+
+The `license-key` input is prepared on this branch; it is not yet part of
+the published `@v1` tag. After the wrapper update is released, supply a
+GitHub Actions secret:
+
+```yaml
+- uses: zhurong2020/pyobfus-action@v1
+  with:
+    source: src/
+    mode: build
+    output: dist/
+    preset: commercial
+    pyobfus-version: "0.12.0"
+    license-key: ${{ secrets.PYOBFUS_LICENSE_KEY }}
+```
+
+An explicit non-empty input takes precedence over an inherited
+`PYOBFUS_LICENSE_KEY`; an empty input preserves the inherited variable.
+The key is passed only in the CLI subprocess environment, never in command
+arguments, reports, outputs or the job summary. Store it as a secret and
+never supply it through `extra-args`.
+
+Core verifies CI licensing online without consuming a device slot or writing
+registration state. Invalid keys or unavailable verification reject a Pro
+build, including when `fail-on: never` is selected. Community builds require
+no license. Earlier Core versions do not implement this CI activation
+mechanism; use Core 0.12.0+ when it is released.
+
+Until the wrapper release, the published Action accepts the same secret
+through the calling step's `env: PYOBFUS_LICENSE_KEY` with Core 0.12.0+.
+Fork pull requests normally cannot access secrets; reserve licensed builds
+for trusted code and refs. `offline` controls dependency lookups, not CI
+license verification. See the [CI licensing guide](https://pyobfus.readthedocs.io/en/latest/CI_LICENSING/).
+
 ### Build output is not a self-contained deployment
 
 This action invokes the pyobfus **builder**; it does not vendor Python package
@@ -156,6 +191,7 @@ not as evidence that the dependency was bundled.
 | `json-file` | `pyobfus-result.json` | Where to save the JSON result. |
 | `config` | | Path to a `pyobfus.yaml`. Omit for auto-discovery. |
 | `preset` | | `fastapi`, `django`, `flask`, `pydantic`, `click`, `sqlalchemy`, `ml`, … |
+| `license-key` | | Pro CI license from a secret (Core 0.12.0+); empty preserves an inherited `PYOBFUS_LICENSE_KEY`. Prepared on this branch, not yet in published `@v1`. |
 | `offline` | `false` | Skip the PyPI lookups behind the dependency advisory. Recommended on hermetic runners. |
 | `verify-syntax` | `false` | `mode: build` only. Compile generated files in memory. |
 | `provenance-manifest` | | `mode: build` only. Path for a local JSON provenance manifest. |

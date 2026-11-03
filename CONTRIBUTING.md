@@ -22,14 +22,21 @@ Set `GITHUB_OUTPUT=/tmp/out.txt` to inspect the step outputs it would publish.
 ## Before opening a pull request
 
 ```bash
-ruff check scripts/
-mypy --ignore-missing-imports scripts/
+ruff check .
+mypy scripts/
+python -m unittest discover -s tests -v
 ```
 
 CI runs those plus the action itself against the fixtures in `tests/fixtures/`
 on Ubuntu, macOS and Windows. Add a fixture and a CI assertion for any
 behaviour change — the tests use `uses: ./` so they exercise the action the way
 a consumer does, not the driver in isolation.
+
+The CI license contract also uses `uses: ./` with explicit and inherited
+synthetic invalid keys, plus a Community build, on all three runner platforms.
+No real license is needed in repository secrets. Until Core 0.12.0 is published,
+that job installs the immutable reviewed Core source revision in the workflow;
+switch it to the exact published version during the post-release wrapper update.
 
 For documentation or metadata-only changes, also verify `action.yml` remains
 valid YAML and that README examples name real inputs and outputs. CI performs
