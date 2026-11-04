@@ -63,6 +63,14 @@ inputs:
     required: false
     default: ""
 
+  license-key:
+    description: >-
+      Pro CI license (Core 0.12.0+). Supply a GitHub Actions secret.
+      Passed only through PYOBFUS_LICENSE_KEY to the CLI subprocess.
+      Empty preserves an existing PYOBFUS_LICENSE_KEY environment variable.
+    required: false
+    default: ""
+
   offline:
     description: >-
       Skip the PyPI lookups behind the dependency advisory. Recommended for
@@ -111,10 +119,10 @@ inputs:
 
 outputs:
   exit-code:
-    description: "pyobfus's own exit code: 0 clean, 1 findings that warrant blocking."
+    description: "pyobfus's own exit code; consult status to distinguish findings from tool errors."
     value: ${{ steps.pyobfus.outputs.exit-code }}
   status:
-    description: '"clean" or "findings".'
+    description: '"clean", "findings", or "error".'
     value: ${{ steps.pyobfus.outputs.status }}
   sarif-file:
     description: "Path to the written SARIF file, or empty if none was requested."
@@ -181,6 +189,7 @@ runs:
         INPUT_JSON_FILE: ${{ inputs.json-file }}
         INPUT_CONFIG: ${{ inputs.config }}
         INPUT_PRESET: ${{ inputs.preset }}
+        INPUT_LICENSE_KEY: ${{ inputs.license-key }}
         INPUT_OFFLINE: ${{ inputs.offline }}
         INPUT_VERIFY_SYNTAX: ${{ inputs.verify-syntax }}
         INPUT_PROVENANCE_MANIFEST: ${{ inputs.provenance-manifest }}
