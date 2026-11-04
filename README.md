@@ -127,8 +127,7 @@ warns when `--save-mapping` points inside the output directory).
 
 ### Pro builds in CI (Core 0.12.0+)
 
-The `license-key` input is prepared on this branch; it is not yet part of
-the published `@v1` tag. After the wrapper update is released, supply a
+Action **v1.1.0** adds the `license-key` input for Core 0.12.0+. Supply a
 GitHub Actions secret:
 
 ```yaml
@@ -152,10 +151,10 @@ Core verifies CI licensing online without consuming a device slot or writing
 registration state. Invalid keys or unavailable verification reject a Pro
 build, including when `fail-on: never` is selected. Community builds require
 no license. Earlier Core versions do not implement this CI activation
-mechanism; use Core 0.12.0+ when it is released.
+mechanism; use Core 0.12.0 or later.
 
-Until the wrapper release, the published Action accepts the same secret
-through the calling step's `env: PYOBFUS_LICENSE_KEY` with Core 0.12.0+.
+The calling step's `env: PYOBFUS_LICENSE_KEY` remains supported with Core
+0.12.0+; an empty `license-key` input preserves it.
 Fork pull requests normally cannot access secrets; reserve licensed builds
 for trusted code and refs. `offline` controls dependency lookups, not CI
 license verification. See the [CI licensing guide](https://pyobfus.readthedocs.io/en/latest/CI_LICENSING/).
@@ -191,7 +190,7 @@ not as evidence that the dependency was bundled.
 | `json-file` | `pyobfus-result.json` | Where to save the JSON result. |
 | `config` | | Path to a `pyobfus.yaml`. Omit for auto-discovery. |
 | `preset` | | `fastapi`, `django`, `flask`, `pydantic`, `click`, `sqlalchemy`, `ml`, … |
-| `license-key` | | Pro CI license from a secret (Core 0.12.0+); empty preserves an inherited `PYOBFUS_LICENSE_KEY`. Prepared on this branch, not yet in published `@v1`. |
+| `license-key` | | Pro CI license from a secret (Core 0.12.0+); empty preserves an inherited `PYOBFUS_LICENSE_KEY`. Available since Action v1.1.0. |
 | `offline` | `false` | Skip the PyPI lookups behind the dependency advisory. Recommended on hermetic runners. |
 | `verify-syntax` | `false` | `mode: build` only. Compile generated files in memory. |
 | `provenance-manifest` | | `mode: build` only. Path for a local JSON provenance manifest. |

@@ -9,12 +9,14 @@ tied to a pyobfus major version; pin `pyobfus-version` if you need that.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-04
+
 ### Added
 
-- Prepare `license-key` for Pro CI builds with Core 0.12.0+: forward a
+- Add `license-key` for Pro CI builds with Core 0.12.0+: forward a
   non-empty secret through the CLI child environment, preserving an inherited
   `PYOBFUS_LICENSE_KEY` when the input is empty. Keys are not CLI arguments or
-  Action outputs. This input is not yet available on the published `v1` tag.
+  Action outputs.
 
 ### Fixed
 
@@ -23,9 +25,8 @@ tied to a pyobfus major version; pin `pyobfus-version` if you need that.
 
 ### Documentation
 
-- Clarify Core PR #98 name-verification availability: merged but not in PyPI
-  0.7.0, opt-in through existing build `extra-args` when a supporting builder
-  is installed; `verify-syntax` and Action inputs/tags remain unchanged.
+- Clarify name-verification availability since Core 0.7.1: opt in through
+  existing build `extra-args`; `verify-syntax` remains compilation-only.
 
 - README links to pyobfus's table of what each build mode renames. Directory
   builds rename module-level names and, since pyobfus 0.6.0, function-local

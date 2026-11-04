@@ -65,7 +65,7 @@ For a runtime-backed Pro build:
 5. do not install or ship the complete Pro builder merely to satisfy runtime
    imports.
 
-## CI license input (prepared for Core 0.12.0)
+## CI license input (Action v1.1.0, Core 0.12.0+)
 
 `license-key` is a wrapper input, not a new activation protocol. `action.yml`
 passes it as `INPUT_LICENSE_KEY`; the driver copies the process environment
@@ -77,7 +77,7 @@ Core owns validation, online verification, device-slot policy and failure
 semantics. `offline` still controls dependency advisory lookups only. The
 wrapper does not register a runner or persist a license. CI uses synthetic
 invalid values to test fail-closed behavior; no real key is stored in CI.
-The input is prepared on a branch and is not in the current `v1` tag.
+The optional input was added in Action v1.1.0.
 
 ## Optional Core name check (since Core 0.7.1)
 

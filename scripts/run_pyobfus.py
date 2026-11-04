@@ -11,8 +11,9 @@ Why this exists rather than a plain `run: pyobfus --check ...` step:
    whether to fail, based on `fail-on`.
 
 2. **It separates findings from tool failures.** pyobfus exits 1 for findings
-   and 2 for a usage/tool error. `fail-on: never` suppresses the former and
-   never the latter, so a typo'd path still fails your build.
+   and may also return 1 with a structured `status: error` response. Usage
+   errors return 2. `fail-on: never` suppresses findings only, so denied
+   Pro builds and typo'd paths still fail the step.
 
 3. It publishes counts as step outputs and writes a job-summary table, neither
    of which a raw `run:` step gives you.
