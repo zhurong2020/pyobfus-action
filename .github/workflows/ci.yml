@@ -237,6 +237,7 @@ jobs:
         run: |
           set -euo pipefail
           test "${{ steps.community.outputs.status }}" = "clean"
+          test "${{ steps.community.outputs.version }}" = "0.12.0"
           test -f community-output/calculator.py
 
   lint:

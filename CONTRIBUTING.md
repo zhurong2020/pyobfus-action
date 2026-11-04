@@ -34,9 +34,9 @@ a consumer does, not the driver in isolation.
 
 The CI license contract also uses `uses: ./` with explicit and inherited
 synthetic invalid keys, plus a Community build, on all three runner platforms.
-No real license is needed in repository secrets. Until Core 0.12.0 is published,
-that job installs the immutable reviewed Core source revision in the workflow;
-switch it to the exact published version during the post-release wrapper update.
+No real license is needed in repository secrets. That job installs the exact
+published Core 0.12.0 distribution and asserts the version reported by the
+Action; it does not use a development source snapshot.
 
 For documentation or metadata-only changes, also verify `action.yml` remains
 valid YAML and that README examples name real inputs and outputs. CI performs
