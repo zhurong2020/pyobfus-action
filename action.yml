@@ -99,8 +99,12 @@ inputs:
 
   pyobfus-version:
     description: >-
-      Version specifier to install, e.g. "0.5.23". Defaults to the latest
-      release. Pin this if you need reproducible CI.
+      Exact version pin, e.g. "0.15.0", installed as pyobfus==<input> when
+      install is true. Empty runs plain pip install pyobfus without --upgrade:
+      a fresh environment resolves the latest release compatible with the
+      runner's Python and configured package index; an installed version may
+      be retained. Pin for reproducible builds. For general constraints,
+      install it yourself and set install to "false".
     required: false
     default: ""
 
@@ -131,7 +135,7 @@ outputs:
     description: "Path to the saved JSON result."
     value: ${{ steps.pyobfus.outputs.json-file }}
   files-scanned:
-    description: "Number of Python files scanned (mode: check)."
+    description: "Number of Python files scanned (mode: check) or processed (mode: build)."
     value: ${{ steps.pyobfus.outputs.files-scanned }}
   findings-total:
     description: "Total findings across all severities."
