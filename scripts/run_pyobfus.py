@@ -7,8 +7,9 @@ Why this exists rather than a plain `run: pyobfus --check ...` step:
    high-severity risks. In a hand-written step that kills the job *before* a
    later step can upload the SARIF, so the documented workaround is to append
    `|| true` -- which then silently discards real tool errors too. This driver
-   always finishes writing its artifacts and outputs, and only then decides
-   whether to fail, based on `fail-on`.
+   writes report artifacts, outputs and the job summary before applying
+   `fail-on` to findings. CLI tool errors publish only `exit-code` and
+   `status: error`, then fail before JSON persistence or summary generation.
 
 2. **It separates findings from tool failures.** pyobfus exits 1 for findings
    and may also return 1 with a structured `status: error` response. Usage
@@ -128,8 +129,10 @@ def build_command() -> tuple[list[str], str, str, str]:
 
 
 def parse_payload(stdout: str) -> dict[str, Any] | None:
-    """pyobfus prints one JSON object on stdout. A tool error prints a Click
-    usage message instead, which is how a failure is told apart from findings.
+    """Parse stdout as one JSON object, including structured error payloads.
+
+    main classifies tool errors: no JSON object, an exit code outside 0/1,
+    or a structured status: error. A Click usage message is not a JSON object.
     """
     text = stdout.strip()
     if not text:
@@ -248,7 +251,7 @@ def main() -> int:
     if completed.stderr.strip():
         print(completed.stderr, file=sys.stderr)
 
-    # A tool error: no parseable JSON, or an exit code outside the contract.
+    # A tool error: no JSON object, an exit code outside 0/1, or status: error.
     # This always fails, and `fail-on: never` must not be able to hide it --
     # otherwise a typo'd path would look like a clean scan.
     if (

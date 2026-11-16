@@ -42,8 +42,13 @@ Update the owning project, then adapt the wrapper with a real-contract test.
 - Action tags (`v1`, `v1.0.1`) and pyobfus versions (`0.7.0`) are unrelated.
 - `@v1` is a moving wrapper tag. Pin an exact Action tag or commit SHA when the
   wrapper itself must be immutable.
-- `pyobfus-version` pins the builder installed by this Action. Omit it to use
-  latest; pin it for reproducible CI.
+- With `install: true`, `pyobfus-version` is an exact builder version value
+  installed as `pyobfus==<input>`, not a general dependency specifier. Omit it
+  to run plain `pip install pyobfus`, without `--upgrade`: in a fresh environment
+  this resolves to the latest release compatible with the runner's Python and
+  configured package index, but an installed version may be retained. Pin it
+  for reproducible builds. For general constraints, install the builder yourself
+  and set `install: false`.
 - The current builder declares `pyobfus-runtime>=0.1.1,<1`. Runtime-backed
   generated artifacts must install a compatible runtime on the target.
 - `install: false` transfers all builder/runtime environment responsibility to

@@ -9,6 +9,17 @@ tied to a pyobfus major version; pin `pyobfus-version` if you need that.
 
 ## [Unreleased]
 
+### Documentation
+
+- Clarify GitHub job-summary disclosure and the dependency-lookup scope of
+  `offline`; Pro CI license verification still requires network access.
+- Limit the artifact/output guarantee to findings gates: CLI tool errors
+  publish only `exit-code` and `status: error`, without saving the JSON result
+  or writing a job summary. Correct the driver comments on structured errors.
+- Describe `files-scanned` in both modes and `pyobfus-version` as an exact
+  equality pin. Document unpinned pip resolution and reuse of an installed
+  version, and recommend pinning for reproducible builds. No behavior changes.
+
 ## [1.1.0] - 2026-11-04
 
 ### Added
@@ -66,8 +77,10 @@ tied to a pyobfus major version; pin `pyobfus-version` if you need that.
   every setting — the `|| true` workaround this replaces could not make that
   distinction, and silently turned a bad path into a clean-looking scan.
 
-- Artifacts and step outputs are always written before the pass/fail decision,
-  so an upload step still has a file to upload when the gate trips.
+- For findings, report artifacts and step outputs are written before the
+  `fail-on` decision, so an upload step still has a file when that gate trips.
+  CLI tool errors publish only `exit-code` and `status: error`, then fail before
+  the driver saves the JSON result or writes the job summary.
 
 - Step outputs: `status`, `exit-code`, `sarif-file`, `json-file`,
   `files-scanned`, `findings-total`, per-severity counts, and the `version` of

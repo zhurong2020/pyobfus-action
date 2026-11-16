@@ -43,11 +43,17 @@ kills the job **before** your upload step runs, so the usual fix is `|| true`:
 crash — all of them now look exactly like a clean scan, and the upload step
 quietly uploads nothing.
 
-This action separates the two. Artifacts and outputs are always written first,
-and only then does it decide whether to fail:
+This action separates the two. For findings, report artifacts, step outputs and
+the job summary are written before the `fail-on` decision:
 
 - **findings** are gated by `fail-on`, which you set
 - **tool errors** always fail the step, even with `fail-on: never`
+
+When the CLI returns a tool error (no parseable JSON object, an exit code other
+than 0 or 1, or a structured `status: error`), the driver publishes only
+`exit-code` and `status: error`, then fails before saving the JSON result or
+writing the job summary. Other outputs are unavailable; report artifacts are
+not guaranteed on this path.
 
 ## Upload to Code Scanning
 
@@ -195,7 +201,7 @@ not as evidence that the dependency was bundled.
 | `verify-syntax` | `false` | `mode: build` only. Compile generated files in memory. |
 | `provenance-manifest` | | `mode: build` only. Path for a local JSON provenance manifest. |
 | `extra-args` | | Raw extra CLI arguments. No validation; an escape hatch. |
-| `pyobfus-version` | *(latest)* | Pin a version, e.g. `0.5.23`, for reproducible CI. |
+| `pyobfus-version` | *(empty)* | Exact version pin, e.g. `0.15.0`, installed as `pyobfus==<input>`. Empty runs plain `pip install pyobfus`; see Requirements for resolution and reuse behavior. Pin for reproducible CI. |
 | `install` | `true` | Set `false` if an earlier step already installed pyobfus. |
 | `working-directory` | `.` | Directory to run in. |
 
@@ -212,6 +218,9 @@ not as evidence that the dependency was bundled.
 | `findings-high` / `findings-medium` / `findings-low` / `findings-info` | Per-severity counts. |
 | `version` | The pyobfus version that actually ran. |
 
+On CLI tool errors, only `exit-code` and `status: error` are published; the
+driver does not save the JSON result or write a job summary.
+
 ## Requirements
 
 Python must be on `PATH`. GitHub-hosted runners have it; use
@@ -219,13 +228,17 @@ Python must be on `PATH`. GitHub-hosted runners have it; use
 `ubuntu-*`, `macos-*` and `windows-*` runners, all three covered by this repo's
 CI.
 
-The action installs pyobfus with `pip` unless you set `install: false`. Pin
-`pyobfus-version` if you want your CI reproducible.
+With `install: true`, setting `pyobfus-version` installs `pyobfus==<input>`;
+it accepts an exact version value, not a general specifier such as
+`>=0.12.0,<1`. Omitting it runs plain `pip install pyobfus`, without `--upgrade`.
+In a fresh environment this resolves to the latest release compatible with
+the runner's Python and configured package index; an already installed version
+may be retained. Pin `pyobfus-version` for reproducible builds. For general
+constraints or a lockfile, install pyobfus yourself and set `install: false`.
 
 pyobfus Core, `pyobfus-runtime`, and this Action are independently versioned.
-`@v1` selects the current compatible Action wrapper, not pyobfus 1.x. By
-default the wrapper installs the latest pyobfus release; set
-`pyobfus-version` to an exact version for reproducible behavior. See
+`@v1` selects the current compatible Action wrapper, not pyobfus 1.x. Set
+`pyobfus-version` to an exact version for reproducible builder selection. See
 [Architecture and compatibility](ARCHITECTURE.md) for ownership, deployment,
 and update rules.
 
